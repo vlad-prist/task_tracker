@@ -21,6 +21,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'users',
+    'tracker',
+    'rest_framework',
 ]
 
 MIDDLEWARE = [
@@ -95,3 +97,9 @@ MEDIA_URL = "media/"
 MEDIA_ROOT = os.path.join(BASE_DIR / "media")
 
 AUTH_USER_MODEL = 'users.User'
+
+REST_FRAMEWORK = {
+    'DATETIME_INPUT_FORMAT': "%d.%m.%Y %H:%M",
+}
+
+DATE_INPUT_FORMATS = '%d.%m.%Y %H:%M'
