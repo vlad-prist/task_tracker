@@ -23,6 +23,8 @@ INSTALLED_APPS = [
     'users',
     'tracker',
     'rest_framework',
+    'django_filters',
+    'drf_yasg',
 ]
 
 MIDDLEWARE = [
@@ -100,6 +102,9 @@ AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
     'DATETIME_INPUT_FORMAT': "%d.%m.%Y %H:%M",
+    'DEFAULT_FILTER_BACKENDS': (
+        'django_filters.rest_framework.DjangoFilterBackend',
+    ),
 }
 
 DATE_INPUT_FORMATS = '%d.%m.%Y %H:%M'
