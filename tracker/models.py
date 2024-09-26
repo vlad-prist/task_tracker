@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 NULLABLE = {"blank": True, "null": True}
 
@@ -14,30 +15,41 @@ class BaseModel(models.Model):
 
 class Task(BaseModel):
     STATUS_CREATED = 'created'
-    STATUS_ASSIGNED = 'assigned'
     STATUS_IN_PROGRESS = 'in_progress'
     STATUS_FINISHED = 'finished'
+    STATUS_OVERDUE = 'overdue'
 
     STATUS_CHOICES = (
         (STATUS_CREATED, 'Создана'),
-        (STATUS_ASSIGNED, 'Назначен исполнитель'),
         (STATUS_IN_PROGRESS, 'В работе'),
         (STATUS_FINISHED, 'Завершена'),
+        (STATUS_OVERDUE, 'Просрочена'),
     )
 
-    name = models.CharField(max_length=300, verbose_name='Название задачи')
+    title = models.CharField(max_length=300, verbose_name='Название задачи')
     related_task = models.ForeignKey('self', on_delete=models.SET_NULL, verbose_name="Связанная задача", **NULLABLE)
     description = models.TextField(verbose_name='Описание задачи')
-    employee = models.ForeignKey('Employee', on_delete=models.SET_NULL, verbose_name='Сотрудник', **NULLABLE)
+    employee = models.ForeignKey('Employee', verbose_name='Сотрудник', on_delete=models.SET_NULL, related_name='task', **NULLABLE)
     deadline = models.DateTimeField(auto_now_add=False, verbose_name='Срок выполнения', help_text='ДД.ММ.ГГГГ 00:00')
     status = models.CharField(max_length=100, verbose_name='Статус задачи', choices=STATUS_CHOICES, default=STATUS_CREATED)
 
     def __str__(self):
-        return self.name, self.description
+        return self.title, self.description
 
     class Meta:
         verbose_name = 'Задача'
         verbose_name_plural = 'Задачи'
+
+    def save(self, *args, **kwargs):
+        """
+        1. При сохранении экземпляра, если указан сотрудник и статус 'created', то изменяем статус на 'in_progress'.
+        2. Если дедлайн просрочен и статус заявки не 'finished', то при обновлении задачи меняется статус на 'overdue'.
+        """
+        if self.employee and self.status == self.STATUS_CREATED:
+            self.status = self.STATUS_IN_PROGRESS
+        elif self.deadline < timezone.now() and self.status != self.STATUS_FINISHED:
+            self.status = self.STATUS_OVERDUE
+        super().save(*args, **kwargs)
 
 
 class Employee(BaseModel):
