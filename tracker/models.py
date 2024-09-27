@@ -32,6 +32,7 @@ class Task(BaseModel):
     employee = models.ForeignKey('Employee', verbose_name='Сотрудник', on_delete=models.SET_NULL, related_name='task', **NULLABLE)
     deadline = models.DateTimeField(auto_now_add=False, verbose_name='Срок выполнения', help_text='ДД.ММ.ГГГГ 00:00')
     status = models.CharField(max_length=100, verbose_name='Статус задачи', choices=STATUS_CHOICES, default=STATUS_CREATED)
+    priority = models.CharField(max_length=100, verbose_name='Приоритет задачи', choices=[('low', 'Низкий'), ('medium', 'Средний'), ('high', 'Высокий')], default='low')
 
     def __str__(self):
         return self.title, self.description
