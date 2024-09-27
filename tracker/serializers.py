@@ -58,6 +58,14 @@ class TaskShortListSerializer(serializers.ModelSerializer):
         )
 
 
+class EmployeeShortSerializer(serializers.ModelSerializer):
+    """Краткая информация о сотрудниках."""
+
+    class Meta:
+        model = Employee
+        fields = ("id", "name", "position", "department")
+
+
 class EmployeeSerializer(serializers.ModelSerializer):
     """Список всех сотрудников."""
 

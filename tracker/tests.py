@@ -32,6 +32,7 @@ class EmployeeTestCase(APITestCase):
             'department': 'HR'
         }
         response = self.client.post(url, data=data)
+        print(response)
         self.assertEqual(
             response.status_code, status.HTTP_201_CREATED
         )

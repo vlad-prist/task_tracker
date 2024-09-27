@@ -6,6 +6,7 @@ from rest_framework import generics, viewsets
 from rest_framework.filters import OrderingFilter
 from tracker.models import Task, Employee
 from tracker.serializers import (
+    EmployeeShortSerializer,
     EmployeeSerializer,
     TaskSerializer,
     EmployeeActiveTaskSerializer,
@@ -38,7 +39,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     """Запрашивает из БД список всех сотрудников, отсортированных по отделу."""
 
     queryset = Employee.objects.all().order_by("department")
-    serializer_class = EmployeeSerializer
+    serializer_class = EmployeeShortSerializer
     pagination_class = EmployeePaginator
 
     def perform_create(self, serializer):
