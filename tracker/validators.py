@@ -14,16 +14,22 @@ def validate_deadline(value):
 
 
 class StatusValidator:
-    """ Валидация: нельзя назначать сотрудника на просроченную заявку. """
-    def __init__(self, field_emp, field_status):
-        self.field_emp = field_emp
+    """ Валидация: нельзя создавать заявку со статусом 'Просрочена'. """
+    def __init__(self, field_status):
         self.field_status = field_status
 
     def __call__(self, value):
-        tmp_val_emp = dict(value).get(self.field_emp)
         tmp_val_status = dict(value).get(self.field_status)
         if tmp_val_status == 'overdue':
-            if tmp_val_emp:
-                raise ValidationError(
-                    "Нельзя назначать сотрудника на заявку со статусом 'Просрочена'!"
-                )
+            raise ValidationError(
+                "Нельзя создавать заявку со статусом 'Просрочена'!"
+            )
+
+
+def validate_employee_to_overdue(value):
+    """ Валидация: нельзя назначать сотрудника на заявку со статусом 'Просрочена'. """
+    if value and value.status == 'overdue':
+        raise ValidationError(
+            "Нельзя назначать или менять исполнителя у просроченной заявки!"
+        )
+

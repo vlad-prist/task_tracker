@@ -1,6 +1,6 @@
 from tracker.models import Employee, Task
 from rest_framework import serializers
-from tracker.validators import validate_deadline, StatusValidator
+from tracker.validators import validate_deadline, StatusValidator, validate_employee_to_overdue
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -25,7 +25,7 @@ class TaskSerializer(serializers.ModelSerializer):
             "status",
         )
         validators = [
-            StatusValidator(field_emp="employee", field_status="status"),
+            StatusValidator(field_status="status"),
         ]
 
     def update(self, obj, validated_data):
@@ -33,6 +33,18 @@ class TaskSerializer(serializers.ModelSerializer):
         new_employee = validated_data.get("employee", None)
         if new_employee and obj.status == Task.STATUS_CREATED:
             obj.status = Task.STATUS_IN_PROGRESS
+        elif new_employee and obj.status == Task.STATUS_OVERDUE:
+            validate_employee_to_overdue(obj)
+        return super().update(obj, validated_data)
+
+    def validate_employees_and_status(self, obj, validated_data, employee):
+        """ Валидация заявки со статусом 'Просрочено'."""
+        new_employee = validated_data.get("employee", None)
+        overdue_employee = validated_data.get("employee", employee)
+        if new_employee and obj.status == Task.STATUS_OVERDUE:
+            validate_employee_to_overdue(obj)
+        elif overdue_employee and obj.status == Task.STATUS_OVERDUE:
+            validate_employee_to_overdue(obj)
         return super().update(obj, validated_data)
 
 
@@ -56,6 +68,9 @@ class TaskShortListSerializer(serializers.ModelSerializer):
             "priority",
             "status",
         )
+        validators = [
+            StatusValidator(field_status="status"),
+        ]
 
 
 class EmployeeShortSerializer(serializers.ModelSerializer):
