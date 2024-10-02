@@ -1,19 +1,20 @@
-# import datetime
-from datetime import timedelta, datetime
-
-from django.test import TestCase
+from datetime import timedelta
 from django.urls import reverse
 from django.utils import timezone
 from rest_framework.test import APITestCase
 from rest_framework import status
 from tracker.models import Employee, Task
-from tracker.validators import validate_deadline
+
 
 class EmployeeTestCase(APITestCase):
     """ Тест экземпляра модели Employee. """
     def setUp(self):
         """ Создание экземпляра модели Employee для дальнейших тестов. """
-        self.employee = Employee.objects.create(name='Иван Иванов', position='Разработчик', department='IT')
+        self.employee = Employee.objects.create(
+            name='Иван Иванов',
+            position='Разработчик',
+            department='IT'
+        )
 
     def test_employee_retrieve(self):
         """ Тест на получение сотрудника по ПК. """
@@ -95,7 +96,11 @@ class TaskTestCase(APITestCase):
             deadline=timezone.now() + timedelta(days=1),
             status=Task.STATUS_CREATED,
         )
-        self.employee = Employee.objects.create(name='Иван Иванов', position='Разработчик', department='IT')
+        self.employee = Employee.objects.create(
+            name='Иван Иванов',
+            position='Разработчик',
+            department='IT'
+        )
 
     def test_task_retrieve(self):
         """ Тест на получение задачи по ПК. """
@@ -133,10 +138,11 @@ class TaskTestCase(APITestCase):
     def test_task_update(self):
         """  Тест на обновление задачи. """
         url = reverse('tracker:task-detail', args=(self.task_one.pk,))
+        deadline = timezone.now() + timedelta(days=1)
         data = {
             'title': "Task one updated",
             'description': 'This is a test task',
-            'deadline': (timezone.now() + timedelta(days=1)).strftime('%d.%m.%Y %H:%M'),
+            'deadline': deadline.strftime('%d.%m.%Y %H:%M'),
             'employee': self.employee.pk,
             'priority': 'medium',
             'status': Task.STATUS_IN_PROGRESS,
@@ -161,7 +167,9 @@ class TaskTestCase(APITestCase):
             response.status_code, status.HTTP_200_OK
         )
         self.assertEqual(
-            Task.objects.get(pk=self.task_one.pk).title, 'Task one partial updated'
+            Task.objects.get(
+                pk=self.task_one.pk
+            ).title, 'Task one partial updated'
         )
 
     def test_task_delete(self):
@@ -188,7 +196,7 @@ class TaskTestCase(APITestCase):
         )
 
     def test_change_status(self):
-        """ Тест на изменение статуса задачи при назначении сотрудника на задачу. """
+        """ Тест на изменение статуса задачи при назначении сотрудника. """
         url = reverse('tracker:task-detail', args=(self.task_one.pk,))
         data = {
             'employee': self.employee.pk,
@@ -199,7 +207,9 @@ class TaskTestCase(APITestCase):
             response.status_code, status.HTTP_200_OK
         )
         self.assertEqual(
-            Task.objects.get(pk=self.task_one.pk).status, Task.STATUS_IN_PROGRESS
+            Task.objects.get(
+                pk=self.task_one.pk
+            ).status, Task.STATUS_IN_PROGRESS
         )
 
     def test_validation_deadline(self):
@@ -225,10 +235,11 @@ class TaskTestCase(APITestCase):
     def test_overdue_task(self):
         """ Тест на проверку просроченной задачи. """
         url = reverse('tracker:task-list')
+        deadline = timezone.now() + timedelta(days=1)
         data = {
             'title': 'Task four',
             'description': 'This is another test task with overdue status',
-            'deadline': (timezone.now() + timedelta(days=1)).strftime('%d.%m.%Y %H:%M'),
+            'deadline': deadline.strftime('%d.%m.%Y %H:%M'),
             'employee': self.employee.pk,
             'status': Task.STATUS_OVERDUE,
             'priority': 'high',

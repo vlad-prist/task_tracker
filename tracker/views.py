@@ -26,7 +26,9 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 
 class TaskListAPIView(generics.ListAPIView):
-    """Запрашивает из БД список всех задач, отсортированных по дате окончания срока выполнения."""
+    """
+    Запрашивает из БД список всех задач, отсортированные по дедлайну.
+    """
 
     serializer_class = TaskSerializer
     queryset = Task.objects.all().order_by("deadline")
@@ -36,7 +38,9 @@ class TaskListAPIView(generics.ListAPIView):
 
 
 class EmployeeViewSet(viewsets.ModelViewSet):
-    """Запрашивает из БД список всех сотрудников, отсортированных по отделу."""
+    """
+    Запрашивает из БД список всех сотрудников, отсортированных по отделу.
+    """
 
     queryset = Employee.objects.all().order_by("department")
     serializer_class = EmployeeShortSerializer
@@ -50,7 +54,8 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
 class EmployeeTaskListAPIView(generics.ListAPIView):
     """
-    1. Запрашивает из БД список сотрудников и их задачи, отсортированные по количеству активных задач.
+    1. Запрашивает из БД список сотрудников и их задачи,
+    отсортированные по количеству активных задач.
     С возможностью фильтрации по должности и отделу.
     """
 
@@ -60,34 +65,53 @@ class EmployeeTaskListAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return Employee.objects.annotate(
-            active_tasks_count=Count("task", filter=Q(task__status="in_progress"))
-        ).filter(active_tasks_count__gt=0).order_by("-active_tasks_count")
+            active_tasks_count=Count(
+                "task",
+                filter=Q(task__status="in_progress")
+            )).filter(
+            active_tasks_count__gt=0
+        ).order_by("-active_tasks_count")
 
 
 class ImportantTaskList(APIView):
-    """Предоставляет из БД:
-    1. задачи, которые не взяты в работу, но от которых зависят другие задачи, взятые в работу.
+    """ Предоставляет из БД:
+    1. Задачи не взяты в работу,
+    но от которых зависят другие задачи, взятые в работу.
     2. Поиск сотрудников, которые могут взять найденную задачу в работу:
     2.1. Это могут быть сотрудники с наименьшей загрузкой
     2.2. Или сотрудник с родительской задачей и с разницей задач не более 2.
     """
 
     def get(self, request, *args, **kwargs):
-        # 1. Запрашивает из БД задачи, которые не взяты в работу, но от которых зависят другие задачи, взятые в работу.
+        # Условие 1.
         task_queryset = Task.objects.filter(
-            employee=None, related_task__employee__isnull=False, priority__iexact="high"
+            employee=None,
+            related_task__employee__isnull=False,
+            priority__iexact="high"
         )
-        # Поиск по сотрудникам, которые могут взять такие задачи
-        employee_queryset = Employee.objects.annotate(tasks_count=Count("task"))
-        min_task_count = employee_queryset.aggregate(Min("tasks_count"))["tasks_count__min"]
-        available_employees = Employee.objects.annotate(tasks_count=Count("task")).filter(
-            # Условие 1: наименее загруженный сотрудник
+        # Условие 2. Поиск по сотрудникам, которые могут взять такие задачи
+        employee_queryset = Employee.objects.annotate(
+            tasks_count=Count("task")
+        )
+        min_task_count = employee_queryset.aggregate(
+            Min("tasks_count")
+        )["tasks_count__min"]
+        available_employees = Employee.objects.annotate(
+            tasks_count=Count("task")
+        ).filter(
+            # Условие 2.1.:
             Q(tasks_count=min_task_count)
             |
-            # Условие 2: сотрудник с родительской задачей и с разницей задач не более 2
-            Q(tasks_count__lte=min_task_count + 2, task__related_task__isnull=False)
+            # Условие 2.2.:
+            Q(
+                tasks_count__lte=min_task_count + 2,
+                task__related_task__isnull=False
+            )
         ).distinct()
-        employee_serializer = EmployeeSerializer(available_employees, many=True)
+        employee_serializer = EmployeeSerializer(
+            available_employees,
+            many=True
+        )
         list_of_task = []
         for one_task in task_queryset:
             list_of_task.append(

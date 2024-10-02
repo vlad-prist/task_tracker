@@ -28,7 +28,9 @@ urlpatterns = [
     ),
     # Запрашивает из БД список всех занятых сотрудников.
     path(
-        "employee/busy/", EmployeeTaskListAPIView.as_view(), name="employees_task_busy"
+        "employee/busy/",
+        EmployeeTaskListAPIView.as_view(),
+        name="employees_task_busy"
     ),
     # Запрашивает из БД список сотрудников для задач с высоким приоритетом.
     path(

@@ -8,8 +8,8 @@ def validate_deadline(value):
 
     if value < dt_now:
         raise ValidationError(
-            f"Указанный дедлайн {value.strftime('%d.%m.%Y %H:%M')} невозможен! "
-            f"Сегодня {dt_now.strftime('%d.%m.%Y %H:%M')}!"
+            f"Указанный дедлайн {value.strftime('%d.%m.%Y %H:%M')} невозможен!"
+            f" Сегодня {dt_now.strftime('%d.%m.%Y %H:%M')}!"
         )
 
 
@@ -27,9 +27,10 @@ class StatusValidator:
 
 
 def validate_employee_to_overdue(value):
-    """ Валидация: нельзя назначать сотрудника на заявку со статусом 'Просрочена'. """
+    """
+    Валидация: Нельзя назначать сотрудника на заявку со статусом 'Просрочена'.
+    """
     if value and value.status == 'overdue':
         raise ValidationError(
             "Нельзя назначать или менять исполнителя у просроченной заявки!"
         )
-

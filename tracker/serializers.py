@@ -1,6 +1,10 @@
 from tracker.models import Employee, Task
 from rest_framework import serializers
-from tracker.validators import validate_deadline, StatusValidator, validate_employee_to_overdue
+from tracker.validators import (
+    validate_deadline,
+    StatusValidator,
+    validate_employee_to_overdue
+)
 
 
 class TaskSerializer(serializers.ModelSerializer):
@@ -29,7 +33,7 @@ class TaskSerializer(serializers.ModelSerializer):
         ]
 
     def update(self, obj, validated_data):
-        """При назначении сотрудника на уже созданную задачу - статус задачи меняется."""
+        """При назначении сотрудника на созданную задачу-изменяется статус."""
         new_employee = validated_data.get("employee", None)
         if new_employee and obj.status == Task.STATUS_CREATED:
             obj.status = Task.STATUS_IN_PROGRESS
