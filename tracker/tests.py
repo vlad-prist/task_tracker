@@ -212,6 +212,29 @@ class TaskTestCase(APITestCase):
             ).status, Task.STATUS_IN_PROGRESS
         )
 
+
+class TaskValidationTestCase(APITestCase):
+    """ Тест валидаций. """
+
+    def setUp(self):
+        self.task_one = Task.objects.create(
+            title="Task one",
+            description="This is a test task",
+            deadline=timezone.now() + timedelta(days=1),
+            status=Task.STATUS_CREATED,
+        )
+        self.employee = Employee.objects.create(
+            name='Иван Иванов',
+            position='Разработчик',
+            department='IT'
+        )
+        self.task_overdue = Task.objects.create(
+            title="Task overdue",
+            description="This is a test overdue task",
+            deadline=timezone.now() - timedelta(days=1),
+            status=Task.STATUS_OVERDUE,
+        )
+
     def test_validation_deadline(self):
         """ Тест валидации дедлайна. """
         url = reverse("tracker:task-list")
@@ -228,9 +251,11 @@ class TaskTestCase(APITestCase):
         self.assertEqual(
             response.status_code, status.HTTP_400_BAD_REQUEST
         )
-        # self.assertEqual(
-        #     response.json()['deadline'][0], f'{validate_deadline(deadline)}'
-        # )
+        self.assertEqual(
+            response.json().get('deadline')[0],
+            f'Указанный дедлайн {deadline.strftime('%d.%m.%Y %H:%M')}'
+            f' невозможен! Сегодня {timezone.now().strftime('%d.%m.%Y %H:%M')}!'
+        )
 
     def test_overdue_task(self):
         """ Тест на проверку просроченной задачи. """
@@ -245,6 +270,18 @@ class TaskTestCase(APITestCase):
             'priority': 'high',
         }
         response = self.client.post(url, data=data)
+        # print(response.json())
+        self.assertEqual(
+            response.status_code, status.HTTP_400_BAD_REQUEST
+        )
+
+    def test_validate_employee_to_overdue(self):
+        """ Тест валидации Нельзя назначать исполнителя у просроченной заявки. """
+        url = reverse('tracker:task-detail', args=(self.task_overdue.pk,))
+        data = {
+            'employee': self.employee.pk,
+        }
+        response = self.client.patch(url, data=data)
         # print(response.json())
         self.assertEqual(
             response.status_code, status.HTTP_400_BAD_REQUEST

@@ -104,9 +104,11 @@ AUTH_USER_MODEL = 'users.User'
 
 REST_FRAMEWORK = {
     'DATETIME_INPUT_FORMAT': "%d.%m.%Y %H:%M",
+    # 'DATETIME_FORMAT': "%d.%m.%Y %H:%M",
     'DEFAULT_FILTER_BACKENDS': (
         'django_filters.rest_framework.DjangoFilterBackend',
     ),
 }
 
-DATE_INPUT_FORMATS = '%d.%m.%Y %H:%M'
+# DATETIME_FORMAT = '%d.%m.%Y %H:%M'
+DATETIME_INPUT_FORMAT = '%d.%m.%Y %H:%M'

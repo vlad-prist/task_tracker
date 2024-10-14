@@ -48,7 +48,7 @@ class Task(BaseModel):
         related_name="task",
         **NULLABLE
     )
-    deadline = models.DateTimeField(
+    deadline = models.DateField(
         auto_now_add=False,
         verbose_name="Срок выполнения",
         help_text="ДД.ММ.ГГГГ 00:00"

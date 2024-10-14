@@ -1,15 +1,14 @@
-from datetime import datetime, timezone
+from datetime import date
 from rest_framework.serializers import ValidationError
 
 
 def validate_deadline(value):
     """ Валидация: нельзя указывать прошедшую дату дедлайна. """
-    dt_now = datetime.now(timezone.utc)
-
+    dt_now = date.today()
     if value < dt_now:
         raise ValidationError(
-            f"Указанный дедлайн {value.strftime('%d.%m.%Y %H:%M')} невозможен!"
-            f" Сегодня {dt_now.strftime('%d.%m.%Y %H:%M')}!"
+            f"Указанный дедлайн {value.strftime('%d.%m.%Y')} невозможен!"
+            f" Сегодня {dt_now.strftime('%d.%m.%Y')}!"
         )
 
 
@@ -28,7 +27,7 @@ class StatusValidator:
 
 def validate_employee_to_overdue(value):
     """
-    Валидация: Нельзя назначать сотрудника на заявку со статусом 'Просрочена'.
+    Валидация: Нельзя назначать или менять исполнителя у просроченной заявки!
     """
     if value and value.status == 'overdue':
         raise ValidationError(

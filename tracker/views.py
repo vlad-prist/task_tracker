@@ -4,6 +4,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework import generics, viewsets
 from rest_framework.filters import OrderingFilter
+
+from tracker.filters import TaskDateFilter
 from tracker.models import Task, Employee
 from tracker.serializers import (
     EmployeeShortSerializer,
@@ -34,7 +36,8 @@ class TaskListAPIView(generics.ListAPIView):
     queryset = Task.objects.all().order_by("deadline")
     pagination_class = TaskPaginator
     filter_backends = [DjangoFilterBackend, OrderingFilter]
-    filterset_fields = ("status", "deadline", "employee")
+    filterset_fields = ("status", "deadline", "employee", "priority")
+    filterset_class = TaskDateFilter
 
 
 class EmployeeViewSet(viewsets.ModelViewSet):
@@ -66,11 +69,8 @@ class EmployeeTaskListAPIView(generics.ListAPIView):
     def get_queryset(self):
         return Employee.objects.annotate(
             active_tasks_count=Count(
-                "task",
-                filter=Q(task__status="in_progress")
-            )).filter(
-            active_tasks_count__gt=0
-        ).order_by("-active_tasks_count")
+                "task", filter=Q(task__status="in_progress")
+            )).filter(active_tasks_count__gt=0).order_by("-active_tasks_count")
 
 
 class ImportantTaskList(APIView):
@@ -90,35 +90,23 @@ class ImportantTaskList(APIView):
             priority__iexact="high"
         )
         # Условие 2. Поиск по сотрудникам, которые могут взять такие задачи
-        employee_queryset = Employee.objects.annotate(
-            tasks_count=Count("task")
-        )
-        min_task_count = employee_queryset.aggregate(
-            Min("tasks_count")
-        )["tasks_count__min"]
-        available_employees = Employee.objects.annotate(
-            tasks_count=Count("task")
-        ).filter(
+        employee_queryset = Employee.objects.annotate(tasks_count=Count("task"))
+        min_task_count = employee_queryset.aggregate(Min("tasks_count"))["tasks_count__min"]
+        available_employees = Employee.objects.annotate(tasks_count=Count("task")).filter(
             # Условие 2.1.:
             Q(tasks_count=min_task_count)
             |
             # Условие 2.2.:
-            Q(
-                tasks_count__lte=min_task_count + 2,
-                task__related_task__isnull=False
-            )
+            Q(tasks_count__lte=min_task_count + 2, task__related_task__isnull=False)
         ).distinct()
-        employee_serializer = EmployeeSerializer(
-            available_employees,
-            many=True
-        )
+        employee_serializer = EmployeeSerializer(available_employees, many=True)
         list_of_task = []
         for one_task in task_queryset:
             list_of_task.append(
                 {
                     "task_id": one_task.id,
                     "Important task": one_task.title,
-                    "Deadline": one_task.deadline.strftime("%d.%m.%Y %H:%M"),
+                    "Deadline": one_task.deadline.strftime("%d.%m.%Y"),
                     "Employees": employee_serializer.data,
                 }
             )

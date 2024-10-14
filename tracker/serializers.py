@@ -10,9 +10,9 @@ from tracker.validators import (
 class TaskSerializer(serializers.ModelSerializer):
     """Список всех задач"""
 
-    deadline = serializers.DateTimeField(
-        format="%d.%m.%Y %H:%M",
-        input_formats=["%d.%m.%Y %H:%M"],
+    deadline = serializers.DateField(
+        format="%d.%m.%Y",
+        input_formats=["%d.%m.%Y"],
         validators=[validate_deadline],
     )
 
@@ -55,9 +55,9 @@ class TaskSerializer(serializers.ModelSerializer):
 class TaskShortListSerializer(serializers.ModelSerializer):
     """Краткая информация о задачах."""
 
-    deadline = serializers.DateTimeField(
-        format="%d.%m.%Y %H:%M",
-        input_formats=["%d.%m.%Y %H:%M"],
+    deadline = serializers.DateField(
+        format="%d.%m.%Y",
+        input_formats=["%d.%m.%Y"],
         validators=[validate_deadline],
     )
 
